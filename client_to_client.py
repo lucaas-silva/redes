@@ -1,6 +1,21 @@
+import json
 import select
 import socket
 import sys
+from datetime import datetime
+
+
+def send_message(sock, dest_ip, dest_port, msg_sent):
+    date = datetime.now()
+    data = {
+        "date": str(date.strftime("%d/%m/%Y")),
+        "time": str(date.strftime("%H:%M:%S")),
+        "username": "lucas",
+        "message": msg_sent,
+    }
+    data = json.dumps(data)
+    print("\tSending message to {}:{:d} with payload: {}".format(dest_ip, dest_port, msg_sent))
+    sock.sendto(bytes(data, "utf-8"), (dest_ip, dest_port))
 
 
 def main():
@@ -23,12 +38,7 @@ def main():
                 print("Message received from {}: {}".format(client, msg_received))
             elif r is sys.stdin:
                 msg_sent = input("Type a message: ")
-                print(
-                    "\tSending message to {}:{:d} with payload: {}".format(
-                        dest_ip, dest_port, msg_sent
-                    )
-                )
-                sock.sendto(bytes(msg_sent, "utf-8"), (dest_ip, dest_port))
+                send_message(sock, dest_ip, dest_port, msg_sent)
 
         """
         msg_sent = input("Type a message: ")
