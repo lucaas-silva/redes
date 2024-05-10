@@ -5,12 +5,12 @@ import sys
 from datetime import datetime
 
 
-def send_message(sock, dest_ip, dest_port, msg_sent):
+def send_message(sock, dest_ip, dest_port, msg_sent, user):
     date = datetime.now()
     data = {
         "date": date.strftime("%d/%m/%Y"),
         "time": date.strftime("%H:%M:%S"),
-        "username": "lucas",
+        "username": user,
         "message": msg_sent,
     }
     data = json.dumps(data)
@@ -31,27 +31,50 @@ def read_message(msg_received, client):
 
 
 def main():
-    local_ip = str(input("\tType server Ip addres: "))
-    local_port = int(input("\tType server UDP port: "))
-    dest_ip = str(input("\tType destination Ip addres: "))
-    dest_port = int(input("\tType destination UDP port: "))
+    start_config = input("\tType start config: ")
+    if start_config == "1":
+        local_ip = str("127.0.0.1")
+        local_port = int(5000)
+        dest_ip = str("127.0.0.1")
+        dest_port = int(5001)
+        user = "user1"
+    elif start_config == "2":
+        local_ip = str("127.0.0.1")
+        local_port = int(5001)
+        dest_ip = str("127.0.0.1")
+        dest_port = int(5000)
+        user = "user2"
+    else:
+        local_ip = str(input("\tType server Ip addres: "))
+        local_port = int(input("\tType server UDP port: "))
+        dest_ip = str(input("\tType destination Ip addres: "))
+        dest_port = int(input("\tType destination UDP port: "))
+        user = str(input("\tType a username: "))
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((local_ip, local_port))
 
     # sys.stdin = input()
     inputs = [sock, sys.stdin]
-    outputs = []
 
-    while True:
-        readble, _, _ = select.select(inputs, outputs, [])
+    try:
+        while True:
+            readble, _, _ = select.select(inputs, [], [])
 
-        for r in readble:
-            if r is sock:
-                msg_received, client = sock.recvfrom(1024)
-                read_message(msg_received, client)
-            elif r is sys.stdin:
-                msg_sent = input()
-                send_message(sock, dest_ip, dest_port, msg_sent)
+            for r in readble:
+                if r is sock:
+                    msg_received, client = sock.recvfrom(1024)
+                    read_message(msg_received, client)
+                elif r is sys.stdin:
+                    print(f"<{user}>: ")
+                    msg_sent = r.readline().strip()
+
+                    if msg_sent == "<exit>":
+                        sock.close()
+                        return
+
+                    send_message(sock, dest_ip, dest_port, msg_sent, user)
+    finally:
+        sock.close()
 
 
 if __name__ == "__main__":
