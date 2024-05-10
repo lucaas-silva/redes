@@ -2,32 +2,54 @@ import json
 import select
 import socket
 import sys
+import threading
 from datetime import datetime
 
 
-def send_message(sock, dest_ip, dest_port, msg_sent, user):
-    date = datetime.now()
-    data = {
-        "date": date.strftime("%d/%m/%Y"),
-        "time": date.strftime("%H:%M:%S"),
-        "username": user,
-        "message": msg_sent,
-    }
-    data = json.dumps(data)
-    print("\tSending message to {}:{:d} with payload: {}".format(dest_ip, dest_port, msg_sent))
-    sock.sendto(bytes(data, "utf-8"), (dest_ip, dest_port))
+class Send_message_threading(threading.Thread):
+    def __init__(self, sock, dest_ip, dest_port, msg_sent, user):
+        super().__init__()
+        self.sock = sock
+        self.dest_ip = dest_ip
+        self.dest_port = dest_port
+        self.msg_sent = msg_sent
+        self.user = user
+
+    def run(self):
+        date = datetime.now()
+        data = {
+            "date": date.strftime("%d/%m/%Y"),
+            "time": date.strftime("%H:%M:%S"),
+            "username": self.user,
+            "message": self.msg_sent,
+        }
+        data = json.dumps(data)
+        print(
+            "\tSending message to {}:{:d} with payload: {}".format(
+                self.dest_ip, self.dest_port, self.msg_sent
+            )
+        )
+        self.sock.sendto(bytes(data, "utf-8"), (self.dest_ip, self.dest_port))
 
 
-def read_message(msg_received, client):
-    msg_received = msg_received.decode("utf-8")
-    msg_received = json.loads(msg_received)
-    date = msg_received["date"]
-    time = msg_received["time"]
-    username = msg_received["username"]
-    message = msg_received["message"]
-    print(
-        "Message received from {}({}):\n\t[{}|{}]: {}".format(username, client, date, time, message)
-    )
+class Read_message_threading(threading.Thread):
+    def __init__(self, msg_received, client):
+        super().__init__()
+        self.msg_received = msg_received
+        self.client = client
+
+    def run(self):
+        msg_received = self.msg_received.decode("utf-8")
+        msg_received = json.loads(msg_received)
+        date = msg_received["date"]
+        time = msg_received["time"]
+        username = msg_received["username"]
+        message = msg_received["message"]
+        print(
+            "Message received from {}({}):\n\t[{}|{}]: {}".format(
+                username, self.client, date, time, message
+            )
+        )
 
 
 def main():
@@ -63,7 +85,7 @@ def main():
             for r in readble:
                 if r is sock:
                     msg_received, client = sock.recvfrom(1024)
-                    read_message(msg_received, client)
+                    Read_message_threading(msg_received, client).start()
                 elif r is sys.stdin:
                     print(f"<{user}>: ")
                     msg_sent = r.readline().strip()
@@ -72,10 +94,12 @@ def main():
                         sock.close()
                         return
 
-                    send_message(sock, dest_ip, dest_port, msg_sent, user)
+                    Send_message_threading(sock, dest_ip, dest_port, msg_sent, user).start()
     finally:
         sock.close()
 
 
 if __name__ == "__main__":
     main()
+    for thread in threading.enumerate():
+        print(thread.name)
