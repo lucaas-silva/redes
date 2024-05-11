@@ -55,15 +55,15 @@ class Read_message_threading(threading.Thread):
 def main():
     start_config = input("\tType start config: ")
     if start_config == "1":
-        local_ip = str("127.0.0.1")
+        local_ip = str("239.0.0.1")
         local_port = int(5000)
-        dest_ip = str("127.0.0.1")
+        dest_ip = str("239.0.0.1")
         dest_port = int(5001)
         user = "user1"
     elif start_config == "2":
-        local_ip = str("127.0.0.1")
+        local_ip = str("239.0.0.1")
         local_port = int(5001)
-        dest_ip = str("127.0.0.1")
+        dest_ip = str("239.0.0.1")
         dest_port = int(5000)
         user = "user2"
     else:
@@ -74,6 +74,11 @@ def main():
         user = str(input("\tType a username: "))
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((local_ip, local_port))
+    sock.setsockopt(
+        socket.IPPROTO_IP,
+        socket.IP_ADD_MEMBERSHIP,
+        socket.inet_aton(local_ip) + socket.inet_aton("0.0.0.0"),
+    )
 
     # sys.stdin = input()
     inputs = [sock, sys.stdin]
