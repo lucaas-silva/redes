@@ -97,6 +97,7 @@ def main():
 
                     if msg_sent == "<exit>":
                         sock.close()
+                        print("Exiting...")
                         return
 
                     Send_message_threading(sock, dest_ip, dest_port, msg_sent, user).start()
@@ -106,5 +107,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    for thread in threading.enumerate():
-        print(thread.name)
