@@ -55,15 +55,15 @@ class Read_message_threading(threading.Thread):
 def main():
     start_config = input("\tType start config: ")
     if start_config == "1":
-        local_ip = str("239.0.0.1")
+        local_ip = str("224.0.1.0")
         local_port = int(5000)
-        dest_ip = str("239.0.0.1")
+        dest_ip = str("224.0.1.0")
         dest_port = int(5001)
         user = "user1"
     elif start_config == "2":
-        local_ip = str("239.0.0.1")
+        local_ip = str("224.0.1.0")
         local_port = int(5001)
-        dest_ip = str("239.0.0.1")
+        dest_ip = str("224.0.1.0")
         dest_port = int(5000)
         user = "user2"
     else:
