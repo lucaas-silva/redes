@@ -3,15 +3,16 @@ import select
 import socket
 import sys
 import threading
+import struct
 from datetime import datetime
 
 
 class Send_message_threading(threading.Thread):
-    def __init__(self, sock, dest_ip, dest_port, msg_sent, user):
+    def __init__(self, sock, ip, port, msg_sent, user):
         super().__init__()
         self.sock = sock
-        self.dest_ip = dest_ip
-        self.dest_port = dest_port
+        self.ip = ip
+        self.port = port
         self.msg_sent = msg_sent
         self.user = user
 
@@ -26,10 +27,10 @@ class Send_message_threading(threading.Thread):
         data = json.dumps(data)
         print(
             "\tSending message to {}:{:d} with payload: {}".format(
-                self.dest_ip, self.dest_port, self.msg_sent
+                self.ip, self.port, self.msg_sent
             )
         )
-        self.sock.sendto(bytes(data, "utf-8"), (self.dest_ip, self.dest_port))
+        self.sock.sendto(bytes(data, "utf-8"), (self.ip, self.port))
 
 
 class Read_message_threading(threading.Thread):
@@ -55,30 +56,23 @@ class Read_message_threading(threading.Thread):
 def main():
     start_config = input("\tType start config: ")
     if start_config == "1":
-        local_ip = str("224.0.1.0")
-        local_port = int(5000)
-        dest_ip = str("224.0.1.0")
-        dest_port = int(5001)
+        ip = str("239.255.255.255")
+        port = int(5000)
         user = "user1"
     elif start_config == "2":
-        local_ip = str("224.0.1.0")
-        local_port = int(5001)
-        dest_ip = str("224.0.1.0")
-        dest_port = int(5000)
+        ip = str("239.255.255.255")
+        port = int(5000)
         user = "user2"
     else:
-        local_ip = str(input("\tType server Ip addres: "))
-        local_port = int(input("\tType server UDP port: "))
-        dest_ip = str(input("\tType destination Ip addres: "))
-        dest_port = int(input("\tType destination UDP port: "))
+        ip = str(input("\tType server Ip addres: "))
+        port = int(input("\tType server UDP port: "))
         user = str(input("\tType a username: "))
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind((local_ip, local_port))
-    sock.setsockopt(
-        socket.IPPROTO_IP,
-        socket.IP_ADD_MEMBERSHIP,
-        socket.inet_aton(local_ip) + socket.inet_aton("0.0.0.0"),
-    )
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind((ip, port))
+    mreq = struct.pack("=4sl", socket.inet_aton(ip), socket.INADDR_ANY)
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+
 
     # sys.stdin = input()
     inputs = [sock, sys.stdin]
@@ -100,7 +94,7 @@ def main():
                         print("Exiting...")
                         return
 
-                    Send_message_threading(sock, dest_ip, dest_port, msg_sent, user).start()
+                    Send_message_threading(sock, ip, port, msg_sent, user).start()
     finally:
         sock.close()
 
