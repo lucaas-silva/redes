@@ -69,7 +69,7 @@ def get(client_sock, file_name):
         hash = hashlib.md5(file_data).hexdigest()
         file_data64 = base64.b64encode(file_data).decode("utf-8")
         send_msg(sock=client_sock, operation="get", file_name=file_name, file=file_data64, hash=hash)
-    except Exception:
+    except FileNotFoundError:
         send_msg(sock=client_sock, operation="error", error_msg = f"File {file_name} does not exits")
 
 def read_msg(client_sock, msg):
@@ -104,8 +104,6 @@ def main(localIp, port):
                 data = ""
             except json.JSONDecodeError:
                 continue
-            # msg = json.loads(bytes.decode(client_sock.recv(buf_size), "utf-8"))
-            # read_msg(msg) 
 
 if __name__ == "__main__":
     format = "[%(asctime)s.%(msecs)03d %(message)s]"

@@ -23,7 +23,6 @@ def put(file_name):
 
         hash = hashlib.md5(file_data).hexdigest()
         file_data64 = base64.b64encode(file_data).decode("utf-8")
-        print("abre")
         return {"command":"put", "file":(file_name, file_data64), "hash":hash}
     except FileNotFoundError:
         logging.info(f"File {file_name} does not exits")
