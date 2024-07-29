@@ -47,13 +47,19 @@ def read_message(msg):
 def generate_message():
     command = input("Type a command: ").split()
 
-    match command[0]:
-        case "ls":
-            return {"command": "ls"} 
-        case "put":
-            return put(command[1])
-        case "get":
-            return {"command": "get", "file": command[1]}
+    if len(command) > 1:
+        match command[0]:
+            case "ls":
+                return {"command": "ls"} 
+            case "put":
+                return put(command[1])
+            case "get":
+                return {"command": "get", "file": command[1]}
+            case _:
+                logging.info("Command not found")
+    else:
+        logging.info("Command not found")
+
 
 def main(srv_addr, srv_port):
     logging.info("Connecting TPC client to %s:%d...", srv_addr, srv_port)
