@@ -47,18 +47,17 @@ def read_message(msg):
 def generate_message():
     command = input("Type a command: ").split()
 
-    if len(command) > 1:
-        match command[0]:
-            case "ls":
-                return {"command": "ls"} 
-            case "put":
+    match command[0]:
+        case "ls":
+            return {"command": "ls"} 
+        case "put":
+            if len(command) > 1:
                 return put(command[1])
-            case "get":
+        case "get":
+            if len(command) > 1:
                 return {"command": "get", "file": command[1]}
-            case _:
-                logging.info("Command not found")
-    else:
-        logging.info("Command not found")
+        case _:
+            logging.info("Command not found")
 
 
 def main(srv_addr, srv_port):
